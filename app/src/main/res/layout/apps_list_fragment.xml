@@ -24,6 +24,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?actionBarSize"
+            app:menu="@menu/apps_list"
             app:popupTheme="?actionBarPopupTheme" />
     </me.zhanghai.android.files.ui.CoordinatorAppBarLayout>
 

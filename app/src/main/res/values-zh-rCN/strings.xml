@@ -661,4 +661,10 @@
     <string name="app_signature_info_validity_format">%1$s 至 %2$s</string>
     <string name="app_signature_info_signature_algorithm">签名算法</string>
     <string name="app_signature_info_key_type">密钥类型</string>
+
+    <string name="apps_list_action_sort">排序</string>
+    <string name="apps_list_action_sort_by_name">按名称</string>
+    <string name="apps_list_action_sort_by_package_name">按包名</string>
+    <string name="apps_list_action_sort_by_install_time">按安装时间</string>
+    <string name="apps_list_action_sort_order_ascending">升序</string>
 </resources>

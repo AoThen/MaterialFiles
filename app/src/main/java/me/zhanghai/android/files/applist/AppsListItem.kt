@@ -10,5 +10,8 @@ import android.content.pm.ApplicationInfo
 class AppsListItem(
     val applicationInfo: ApplicationInfo,
     val label: String,
-    val signatureDigest: String
+    val signatureDigest: String,
+    val issuerName: String,
+    val subjectName: String,
+    val firstInstallTime: Long
 )
