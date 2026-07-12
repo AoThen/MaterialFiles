@@ -798,6 +798,24 @@
     <string name="about_author_github_title">Follow on GitHub</string>
     <string name="about_author_twitter_title">Follow on Twitter</string>
 
+    <string name="navigation_apps">Installed apps</string>
+    <string name="apps_list_title">Installed apps</string>
+    <string name="app_signature_info_title">App signature info</string>
+    <string name="app_signature_info_package_name">Package name</string>
+    <string name="app_signature_info_version_name">Version name</string>
+    <string name="app_signature_info_version_code">Version code</string>
+    <string name="app_signature_info_version_format">%1$s (%2$d)</string>
+    <string name="app_signature_info_sha256">SHA-256 digest</string>
+    <string name="app_signature_info_sha1">SHA-1 digest</string>
+    <string name="app_signature_info_serial_number">Certificate serial number</string>
+    <string name="app_signature_info_certificate_index_format">[%1$d] </string>
+    <string name="app_signature_info_issuer">Issuer</string>
+    <string name="app_signature_info_subject">Subject</string>
+    <string name="app_signature_info_validity">Validity</string>
+    <string name="app_signature_info_validity_format">%1$s to %2$s</string>
+    <string name="app_signature_info_signature_algorithm">Signature algorithm</string>
+    <string name="app_signature_info_key_type">Key type</string>
+
     <string name="shortcut_downloads_title" translatable="false">@string/navigation_standard_directory_downloads</string>
     <string name="shortcut_ftp_server_title" translatable="false">@string/ftp_server_title</string>
 </resources>

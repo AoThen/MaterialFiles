@@ -9,6 +9,8 @@ import java.security.MessageDigest
 
 fun ByteArray.sha1Digest(): ByteArray = MessageDigest.getInstance("SHA-1").digest(this)
 
+fun ByteArray.sha256Digest(): ByteArray = MessageDigest.getInstance("SHA-256").digest(this)
+
 fun ByteArray.toHexString(): String {
     val chars = CharArray(2 * size)
     for (index in indices) {
