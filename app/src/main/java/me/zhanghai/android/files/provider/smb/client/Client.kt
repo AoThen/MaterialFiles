@@ -24,6 +24,7 @@ import com.hierynomus.smbj.ProgressListener
 import com.hierynomus.smbj.SMBClient
 import com.hierynomus.smbj.auth.AuthenticationContext
 import com.hierynomus.smbj.common.SMBRuntimeException
+import com.hierynomus.smbj.config.SMBConfig
 import com.hierynomus.smbj.session.Session
 import com.hierynomus.smbj.share.Directory
 import com.hierynomus.smbj.share.DiskShare
@@ -48,12 +49,19 @@ import java.net.UnknownHostException
 import java.util.Collections
 import java.util.WeakHashMap
 import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 
 object Client {
     @Volatile
     lateinit var authenticator: Authenticator
 
-    private val client = SMBClient()
+    private val client = SMBClient(
+        SMBConfig.Builder()
+            .withSocketBufferSize(512 * 1024)
+            .withMultiCreditEnabled(true)
+            .withRequestTimeout(30, TimeUnit.SECONDS)
+            .build()
+    )
 
     private val sessions = mutableMapOf<Authority, Session>()
 
