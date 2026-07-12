@@ -22,9 +22,9 @@ object WalkFileTreeSearchable {
         directory: Path,
         query: String,
         intervalMillis: Long,
-        listener: (List<Path>) -> Unit
+        listener: (List<Pair<Path, BasicFileAttributes>>) -> Unit
     ) {
-        val paths = mutableListOf<Path>()
+        val paths = mutableListOf<Pair<Path, BasicFileAttributes>>()
         // We cannot use Files.find() or Files.walk() because it cannot ignore exceptions.
         walkFileTreeForSearch(directory, object : FileVisitor<Path> {
             private var lastProgressMillis = System.currentTimeMillis()
@@ -34,14 +34,14 @@ object WalkFileTreeSearchable {
                 directory: Path,
                 attributes: BasicFileAttributes
             ): FileVisitResult {
-                visit(directory)
+                visit(directory, attributes)
                 throwIfInterrupted()
                 return FileVisitResult.CONTINUE
             }
 
             @Throws(InterruptedIOException::class)
             override fun visitFile(file: Path, attributes: BasicFileAttributes): FileVisitResult {
-                visit(file)
+                visit(file, attributes)
                 throwIfInterrupted()
                 return FileVisitResult.CONTINUE
             }
@@ -52,7 +52,6 @@ object WalkFileTreeSearchable {
                     throw exception
                 }
                 exception.printStackTrace()
-                visit(file)
                 throwIfInterrupted()
                 return FileVisitResult.CONTINUE
             }
@@ -70,14 +69,14 @@ object WalkFileTreeSearchable {
                 return FileVisitResult.CONTINUE
             }
 
-            private fun visit(path: Path) {
+            private fun visit(path: Path, attributes: BasicFileAttributes) {
                 // Exclude the directory being searched.
                 if (path == directory) {
                     return
                 }
                 val fileName = path.fileName
                 if (fileName != null && fileName.toString().contains(query, true)) {
-                    paths.add(path)
+                    paths.add(path to attributes)
                 }
                 if (paths.isNotEmpty()) {
                     val currentTimeMillis = System.currentTimeMillis()

@@ -180,7 +180,7 @@ abstract class RootableFileSystemProvider(
         directory: Path,
         query: String,
         intervalMillis: Long,
-        listener: (List<Path>) -> Unit
+        listener: (List<Pair<Path, BasicFileAttributes>>) -> Unit
     ) {
         callRootable(directory) {
             (this as Searchable).search(directory, query, intervalMillis, listener)

@@ -443,7 +443,7 @@ object FtpFileSystemProvider : FileSystemProvider(), PathObservableProvider, Sea
         directory: Path,
         query: String,
         intervalMillis: Long,
-        listener: (List<Path>) -> Unit
+        listener: (List<Pair<Path, BasicFileAttributes>>) -> Unit
     ) {
         directory as? FtpPath ?: throw ProviderMismatchException(directory.toString())
         WalkFileTreeSearchable.search(directory, query, intervalMillis, listener)

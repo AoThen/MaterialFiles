@@ -328,7 +328,7 @@ object SftpFileSystemProvider : FileSystemProvider(), PathObservableProvider, Se
         directory: Path,
         query: String,
         intervalMillis: Long,
-        listener: (List<Path>) -> Unit
+        listener: (List<Pair<Path, BasicFileAttributes>>) -> Unit
     ) {
         directory as? SftpPath ?: throw ProviderMismatchException(directory.toString())
         WalkFileTreeSearchable.search(directory, query, intervalMillis, listener)

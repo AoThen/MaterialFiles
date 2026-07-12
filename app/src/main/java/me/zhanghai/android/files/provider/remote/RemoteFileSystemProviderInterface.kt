@@ -163,7 +163,7 @@ class RemoteFileSystemProviderInterface(
         directory: ParcelableObject,
         query: String,
         intervalMillis: Long,
-        listener: ParcelablePathListConsumer,
+        listener: ParcelablePathAttributesListConsumer,
         callback: RemoteCallback
     ): RemoteCallback {
         val future = executorService.submit<Unit> {

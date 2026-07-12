@@ -434,7 +434,7 @@ object WebDavFileSystemProvider : FileSystemProvider(), PathObservableProvider, 
         directory: Path,
         query: String,
         intervalMillis: Long,
-        listener: (List<Path>) -> Unit
+        listener: (List<Pair<Path, BasicFileAttributes>>) -> Unit
     ) {
         directory as? WebDavPath ?: throw ProviderMismatchException(directory.toString())
         WalkFileTreeSearchable.search(directory, query, intervalMillis, listener)

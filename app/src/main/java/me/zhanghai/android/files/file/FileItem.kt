@@ -45,9 +45,8 @@ data class FileItem(
 
 @WorkerThread
 @Throws(IOException::class)
-fun Path.loadFileItem(): FileItem {
+fun Path.loadFileItem(attributes: BasicFileAttributes): FileItem {
     val nameCollationKey = Collator.getInstance().getCollationKeyForFileName(name)
-    val attributes = readAttributes(BasicFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS)
     val isHidden = isHidden
     if (!attributes.isSymbolicLink) {
         val mimeType = AndroidFileTypeDetector.getMimeType(this, attributes).asMimeType()
@@ -67,4 +66,10 @@ fun Path.loadFileItem(): FileItem {
         this, nameCollationKey, attributes, symbolicLinkTarget, symbolicLinkTargetAttributes,
         isHidden, mimeType
     )
+}
+
+@WorkerThread
+@Throws(IOException::class)
+fun Path.loadFileItem(): FileItem {
+    return loadFileItem(readAttributes(BasicFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS))
 }

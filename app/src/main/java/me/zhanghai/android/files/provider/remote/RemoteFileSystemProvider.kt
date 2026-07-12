@@ -241,7 +241,7 @@ abstract class RemoteFileSystemProvider(
         directory: Path,
         query: String,
         intervalMillis: Long,
-        listener: (List<Path>) -> Unit
+        listener: (List<Pair<Path, BasicFileAttributes>>) -> Unit
     ) {
         var interruptible: RemoteCallback? = null
         try {

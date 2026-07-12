@@ -7,6 +7,7 @@ package me.zhanghai.android.files.filelist
 
 import android.os.AsyncTask
 import java8.nio.file.Path
+import java8.nio.file.attribute.BasicFileAttributes
 import me.zhanghai.android.files.file.FileItem
 import me.zhanghai.android.files.file.loadFileItem
 import me.zhanghai.android.files.provider.common.search
@@ -36,10 +37,10 @@ class SearchFileListLiveData(
         future = (AsyncTask.THREAD_POOL_EXECUTOR as ExecutorService).submit<Unit> {
             val fileList = mutableListOf<FileItem>()
             try {
-                path.search(query, INTERVAL_MILLIS) { paths: List<Path> ->
-                    for (path in paths) {
+                path.search(query, INTERVAL_MILLIS) { pathsAndAttributes: List<Pair<Path, BasicFileAttributes>> ->
+                    for ((path, attributes) in pathsAndAttributes) {
                         val fileItem = try {
-                            path.loadFileItem()
+                            path.loadFileItem(attributes)
                         } catch (e: IOException) {
                             e.printStackTrace()
                             // TODO: Support file without information.

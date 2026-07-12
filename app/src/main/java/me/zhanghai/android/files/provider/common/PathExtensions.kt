@@ -339,7 +339,7 @@ fun Path.resolveForeign(other: Path): Path {
 }
 
 @Throws(IOException::class)
-fun Path.search(query: String, intervalMillis: Long, listener: (List<Path>) -> Unit) {
+fun Path.search(query: String, intervalMillis: Long, listener: (List<Pair<Path, BasicFileAttributes>>) -> Unit) {
     (provider as Searchable).search(this, query, intervalMillis, listener)
 }
 
