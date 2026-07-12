@@ -56,10 +56,10 @@ object Client {
     lateinit var authenticator: Authenticator
 
     private val client = SMBClient(
-        SmbConfig.Builder()
-            .withSocketBufferSize(512 * 1024)
-            .withMultiCreditEnabled(true)
-            .withRequestTimeout(30, TimeUnit.SECONDS)
+        SmbConfig.builder()
+            .withReadBufferSize(512 * 1024)
+            .withWriteBufferSize(512 * 1024)
+            .withTransactTimeout(30, TimeUnit.SECONDS)
             .build()
     )
 
