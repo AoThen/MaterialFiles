@@ -68,7 +68,7 @@ class SignatureInfoLiveData(private val packageName: String) : LiveData<Stateful
                     val keySize = when (publicKey) {
                         is java.security.interfaces.RSAKey -> publicKey.modulus.bitLength()
                         is java.security.interfaces.ECKey -> publicKey.params.order.bitLength()
-                        is java.security.interfaces.DSAKey -> publicKey.params.bitLength()
+                        is java.security.interfaces.DSAKey -> publicKey.params.p.bitLength()
                         else -> 0
                     }
                     val keyType = if (keySize > 0) {
@@ -96,7 +96,7 @@ class SignatureInfoLiveData(private val packageName: String) : LiveData<Stateful
                 )
                 Success(signatureInfo)
             } catch (e: Exception) {
-                Failure(value.value, e)
+                Failure(value?.value, e)
             }
             postValue(result)
         }

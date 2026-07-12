@@ -39,7 +39,7 @@ class AppsListAdapter(
         val item = getItem(position)!!
         val binding = holder.binding
         binding.appIcon.setImageDrawable(
-            item.applicationInfo.loadIcon(binding.appIcon.context)
+            item.applicationInfo.loadIcon(binding.appIcon.context.packageManager)
         )
         binding.appNameText.text = item.label
         binding.appPackageText.text = item.applicationInfo.packageName
