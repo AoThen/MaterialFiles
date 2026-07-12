@@ -29,6 +29,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.time.Instant
+import org.threeten.bp.Instant as ThreeTenInstant
 import java.util.Collections
 import java.util.WeakHashMap
 import java8.nio.channels.SeekableByteChannel
@@ -219,7 +220,9 @@ object Client {
         // https://github.com/sabre-io/dav/issues/1277
         try {
             DavResource(getClient(path.authority), path.url).proppatch(
-                mapOf(GetLastModified.NAME to HttpUtils.formatDate(lastModifiedTime)), emptyList()
+                mapOf(GetLastModified.NAME to HttpUtils.formatDate(
+                    ThreeTenInstant.ofEpochSecond(lastModifiedTime.epochSecond, lastModifiedTime.nano.toLong())
+                )), emptyList()
             ) { response, _ -> response.checkSuccess() }
         } catch (e: IOException) {
             throw e.toDavException()

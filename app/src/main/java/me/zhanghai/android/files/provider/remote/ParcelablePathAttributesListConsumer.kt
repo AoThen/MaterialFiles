@@ -28,7 +28,7 @@ class ParcelablePathAttributesListConsumer(
                 val paths = pairs.map { it.first }
                 val attributes = pairs.map { it.second.toParcelable() }
                 remoteCallback.sendResult(Bundle().putArgs(ListenerArgs(paths, attributes)))
-            }
+            } as (List<Pair<Path, BasicFileAttributes>>) -> Unit
         }
     )
 

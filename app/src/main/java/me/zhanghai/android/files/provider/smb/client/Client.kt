@@ -24,7 +24,7 @@ import com.hierynomus.smbj.ProgressListener
 import com.hierynomus.smbj.SMBClient
 import com.hierynomus.smbj.auth.AuthenticationContext
 import com.hierynomus.smbj.common.SMBRuntimeException
-import com.hierynomus.smbj.config.SMBConfig
+import com.hierynomus.smbj.SmbConfig
 import com.hierynomus.smbj.session.Session
 import com.hierynomus.smbj.share.Directory
 import com.hierynomus.smbj.share.DiskShare
@@ -56,7 +56,7 @@ object Client {
     lateinit var authenticator: Authenticator
 
     private val client = SMBClient(
-        SMBConfig.Builder()
+        SmbConfig.Builder()
             .withSocketBufferSize(512 * 1024)
             .withMultiCreditEnabled(true)
             .withRequestTimeout(30, TimeUnit.SECONDS)
