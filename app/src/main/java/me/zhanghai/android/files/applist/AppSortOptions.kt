@@ -12,13 +12,13 @@ data class AppSortOptions(
     val order: Order
 ) {
     fun createComparator(): Comparator<AppsListItem> {
-        var comparator: Comparator<AppsListItem> = compareBy { it.label.lowercase() }
+        var comparator: Comparator<AppsListItem> = compareBy<AppsListItem> { it.label.lowercase() }
         when (by) {
             By.NAME -> {}
             By.PACKAGE_NAME ->
-                comparator = compareBy { it.applicationInfo.packageName }.then(comparator)
+                comparator = compareBy<AppsListItem> { it.applicationInfo.packageName }.then(comparator)
             By.INSTALL_TIME ->
-                comparator = compareBy { it.firstInstallTime }.then(comparator)
+                comparator = compareBy<AppsListItem> { it.firstInstallTime }.then(comparator)
         }
         if (order == Order.DESCENDING) {
             comparator = comparator.reversedCompat()
