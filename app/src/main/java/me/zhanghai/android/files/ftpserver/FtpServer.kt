@@ -7,10 +7,12 @@ package me.zhanghai.android.files.ftpserver
 
 import java8.nio.file.Path
 import org.apache.ftpserver.ConnectionConfigFactory
+import org.apache.ftpserver.DataConnectionConfigurationFactory
 import org.apache.ftpserver.FtpServer
 import org.apache.ftpserver.FtpServerFactory
 import org.apache.ftpserver.ftplet.FtpException
 import org.apache.ftpserver.listener.ListenerFactory
+import org.apache.ftpserver.ssl.SslConfiguration
 import org.apache.ftpserver.usermanager.impl.BaseUser
 import org.apache.ftpserver.usermanager.impl.WritePermission
 
@@ -19,7 +21,9 @@ class FtpServer(
     private val password: String?,
     private val port: Int,
     private val homeDirectory: Path,
-    private val writable: Boolean
+    private val writable: Boolean,
+    private val sslConfiguration: SslConfiguration?,
+    private val implicit: Boolean
 ) {
     private lateinit var server: FtpServer
 
@@ -28,7 +32,21 @@ class FtpServer(
         server = FtpServerFactory()
             .apply {
                 val listener = ListenerFactory()
-                    .apply { port = this@FtpServer.port }
+                    .apply {
+                        port = this@FtpServer.port
+                        if (this@FtpServer.sslConfiguration != null) {
+                            setSslConfiguration(this@FtpServer.sslConfiguration)
+                            setImplicitSsl(this@FtpServer.implicit)
+                            val dataConnectionConfiguration =
+                                DataConnectionConfigurationFactory()
+                                    .apply {
+                                        setSslConfiguration(this@FtpServer.sslConfiguration)
+                                        setImplicitSsl(this@FtpServer.implicit)
+                                    }
+                                    .createDataConnectionConfiguration()
+                            setDataConnectionConfiguration(dataConnectionConfiguration)
+                        }
+                    }
                     .createListener()
                 addListener("default", listener)
                 val user = BaseUser().apply {

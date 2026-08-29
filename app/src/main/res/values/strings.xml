@@ -731,6 +731,12 @@
     <string name="ftp_server_writable_title">Allow writing</string>
     <string name="ftp_server_notification_title" translatable="false">@string/ftp_server_title</string>
     <string name="ftp_server_notification_text_no_local_inet_address" translatable="false">@string/ftp_server_url_summary_no_local_inet_address</string>
+    <string name="ftp_server_protocol_title">Protocol</string>
+    <string-array name="ftp_server_protocol_entries" translatable="false">
+        <item>FTP (no encryption)</item>
+        <item>FTPS (implicit TLS)</item>
+        <item>FTPES (explicit TLS)</item>
+    </string-array>
 
     <string name="settings_title">Settings</string>
     <string name="settings_interface_title">Interface</string>

@@ -19,6 +19,7 @@ import me.zhanghai.android.files.util.WakeWifiLock
 import me.zhanghai.android.files.util.showToast
 import me.zhanghai.android.files.util.valueCompat
 import java.util.concurrent.Executors
+import org.apache.ftpserver.ssl.SslConfiguration
 
 class FtpServerService : Service() {
     private var state = State.STOPPED
@@ -104,7 +105,16 @@ class FtpServerService : Service() {
         val port = Settings.FTP_SERVER_PORT.valueCompat
         val homeDirectory = Settings.FTP_SERVER_HOME_DIRECTORY.valueCompat
         val writable = Settings.FTP_SERVER_WRITABLE.valueCompat
-        val server = FtpServer(username, password, port, homeDirectory, writable)
+        val protocol = Settings.FTP_SERVER_PROTOCOL.valueCompat
+        val sslConfiguration: SslConfiguration? =
+            if (protocol != Protocol.FTP) {
+                CertificateGenerator.getSslConfiguration(this)
+            } else {
+                null
+            }
+        val server = FtpServer(
+            username, password, port, homeDirectory, writable, sslConfiguration, protocol.implicit
+        )
         this.server = server
         try {
             server.start()

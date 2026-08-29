@@ -60,5 +60,13 @@
             android:key="@string/pref_key_ftp_server_writable"
             android:title="@string/ftp_server_writable_title"
             android:defaultValue="@bool/pref_default_value_ftp_server_writable" />
+
+        <rikka.preference.SimpleMenuPreference
+            android:key="@string/pref_key_ftp_server_protocol"
+            android:title="@string/ftp_server_protocol_title"
+            android:defaultValue="@string/pref_default_value_ftp_server_protocol"
+            android:entries="@array/ftp_server_protocol_entries"
+            android:entryValues="@array/pref_entry_values_ftp_server_protocol"
+            app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 </PreferenceScreen>

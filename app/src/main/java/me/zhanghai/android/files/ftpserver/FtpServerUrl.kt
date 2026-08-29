@@ -26,7 +26,8 @@ object FtpServerUrl {
         }
         val host = localAddress.hostAddress
         val port = Settings.FTP_SERVER_PORT.valueCompat
-        return "ftp://${if (username != null) "$username@" else ""}$host:$port/"
+        val scheme = Settings.FTP_SERVER_PROTOCOL.valueCompat.scheme
+        return "$scheme://${if (username != null) "$username@" else ""}$host:$port/"
     }
 
     fun createChangeReceiver(context: Context, onChange: () -> Unit): RuntimeBroadcastReceiver =

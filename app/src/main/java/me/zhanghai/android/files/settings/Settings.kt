@@ -15,6 +15,7 @@ import me.zhanghai.android.files.compat.EnvironmentCompat2
 import me.zhanghai.android.files.filelist.FileSortOptions
 import me.zhanghai.android.files.filelist.FileViewType
 import me.zhanghai.android.files.filelist.OpenApkDefaultAction
+import me.zhanghai.android.files.ftpserver.Protocol
 import me.zhanghai.android.files.navigation.BookmarkDirectory
 import me.zhanghai.android.files.navigation.StandardDirectorySettings
 import me.zhanghai.android.files.provider.root.RootStrategy
@@ -97,6 +98,12 @@ object Settings {
     val FTP_SERVER_WRITABLE: SettingLiveData<Boolean> =
         BooleanSettingLiveData(
             R.string.pref_key_ftp_server_writable, R.bool.pref_default_value_ftp_server_writable
+        )
+
+    val FTP_SERVER_PROTOCOL: SettingLiveData<Protocol> =
+        EnumSettingLiveData(
+            R.string.pref_key_ftp_server_protocol, R.string.pref_default_value_ftp_server_protocol,
+            Protocol::class.java
         )
 
     val THEME_COLOR: SettingLiveData<ThemeColor> =
