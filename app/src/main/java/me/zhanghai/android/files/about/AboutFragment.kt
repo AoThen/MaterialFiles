@@ -6,6 +6,7 @@
 package me.zhanghai.android.files.about
 
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +14,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import me.zhanghai.android.files.R
 import me.zhanghai.android.files.databinding.AboutFragmentBinding
 import me.zhanghai.android.files.ui.LicensesDialogFragment
 import me.zhanghai.android.files.util.createViewIntent
@@ -38,6 +40,8 @@ class AboutFragment : Fragment() {
         activity.supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         binding.gitHubLayout.setOnClickListener { startActivitySafe(GITHUB_URI.createViewIntent()) }
         binding.licensesLayout.setOnClickListener { LicensesDialogFragment.show(this) }
+        binding.systemVersionText.text =
+            getString(R.string.about_system_version_format, Build.VERSION.RELEASE, Build.VERSION.SDK_INT)
 //#ifdef NONFREE
         binding.privacyPolicyLayout.isVisible = true
         binding.privacyPolicyLayout.setOnClickListener {
