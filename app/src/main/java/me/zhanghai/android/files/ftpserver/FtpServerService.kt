@@ -106,17 +106,17 @@ class FtpServerService : Service() {
         val homeDirectory = Settings.FTP_SERVER_HOME_DIRECTORY.valueCompat
         val writable = Settings.FTP_SERVER_WRITABLE.valueCompat
         val protocol = Settings.FTP_SERVER_PROTOCOL.valueCompat
-        val sslConfiguration: SslConfiguration? =
-            if (protocol != Protocol.FTP) {
-                CertificateGenerator.getSslConfiguration(this)
-            } else {
-                null
-            }
-        val server = FtpServer(
-            username, password, port, homeDirectory, writable, sslConfiguration, protocol.implicit
-        )
-        this.server = server
         try {
+            val sslConfiguration: SslConfiguration? =
+                if (protocol != Protocol.FTP) {
+                    CertificateGenerator.getSslConfiguration(this)
+                } else {
+                    null
+                }
+            val server = FtpServer(
+                username, password, port, homeDirectory, writable, sslConfiguration, protocol.implicit
+            )
+            this.server = server
             server.start()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -129,9 +129,11 @@ class FtpServerService : Service() {
 
     @WorkerThread
     private fun doStop() {
-        val server = server ?: return
-        server.stop()
-        this.server = null
+        val server = server
+        if (server != null) {
+            server.stop()
+            this.server = null
+        }
         postState(State.STOPPED)
     }
 

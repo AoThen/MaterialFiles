@@ -86,13 +86,10 @@ object CertificateGenerator {
         val certificateHolder = JcaX509v3CertificateBuilder(
             subject, serial, notBefore, notAfter, subject, keyPair.public
         )
-            .addExtension(Extension.basicConstraints, true, BasicConstraints(true))
+            .addExtension(Extension.basicConstraints, true, BasicConstraints(false))
             .addExtension(
                 Extension.keyUsage, true,
-                KeyUsage(
-                    KeyUsage.digitalSignature or KeyUsage.keyEncipherment
-                        or KeyUsage.keyCertSign or KeyUsage.cRLSign
-                )
+                KeyUsage(KeyUsage.digitalSignature or KeyUsage.keyEncipherment)
             )
             .build(JcaContentSignerBuilder("SHA256withRSA").build(keyPair.private))
         val certificate = JcaX509CertificateConverter()
