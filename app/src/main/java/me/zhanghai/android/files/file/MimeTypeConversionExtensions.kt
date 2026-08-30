@@ -58,7 +58,10 @@ private val extensionToMimeTypeOverrideMap = mapOf(
     "log" to "text/plain",
     "prop" to "text/plain",
     "properties" to "text/plain",
-    "rc" to "text/plain"
+    "rc" to "text/plain",
+    "jpg1" to "image/jpeg",
+    "png1" to "image/png",
+    "mp41" to "video/mp4"
 ).mapValues { it.value.asMimeType() }
 
 fun MimeType.Companion.forSpecialPosixFileType(type: PosixFileType): MimeType? =
