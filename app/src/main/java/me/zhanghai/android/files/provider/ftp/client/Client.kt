@@ -84,9 +84,10 @@ object Client {
         return authority.protocol.createClient().apply {
             configure(FTPClientConfig(""))
             // This has to be set before connect().
+            setConnectTimeout(CONNECT_TIMEOUT_MILLIS)
             controlEncoding = authority.encoding
             listHiddenFiles = true
-            connect(authority.host, authority.port, CONNECT_TIMEOUT_MILLIS)
+            connect(authority.host, authority.port)
             try {
                 if (!FTPReply.isPositiveCompletion(replyCode)) {
                     throwNegativeReplyCodeException()
