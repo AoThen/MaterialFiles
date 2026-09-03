@@ -30,6 +30,8 @@ import org.apache.commons.net.ftp.FTPReply
 import org.apache.commons.net.ftp.FTPSClient
 
 object Client {
+    private const val CONNECT_TIMEOUT_MILLIS = 30 * 1000
+
     private val TIMESTAMP_FORMATTER =
         DateTimeFormatter.ofPattern("yyyyMMddHHmmss", Locale.ROOT)
             .withChronology(IsoChronology.INSTANCE)
@@ -84,7 +86,7 @@ object Client {
             // This has to be set before connect().
             controlEncoding = authority.encoding
             listHiddenFiles = true
-            connect(authority.host, authority.port)
+            connect(authority.host, authority.port, CONNECT_TIMEOUT_MILLIS)
             try {
                 if (!FTPReply.isPositiveCompletion(replyCode)) {
                     throwNegativeReplyCodeException()

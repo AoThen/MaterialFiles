@@ -30,7 +30,7 @@ android {
     ndkVersion '28.1.13356709'
     defaultConfig {
         applicationId 'me.zhanghai.android.files'
-        minSdk 23
+        minSdk 24
         // Not supporting foreground service timeout yet.
         //noinspection OldTargetApi
         targetSdk 34
@@ -200,12 +200,13 @@ dependencies {
     implementation 'me.zhanghai.android.retrofile:library:1.2.0'
     implementation 'me.zhanghai.android.systemuihelper:library:1.0.0'
     implementation 'org.apache.ftpserver:ftpserver-core:1.2.1'
-    // This is a dependency of org.apache.ftpserver:ftpserver-core but org.apache.mina:mina-core
-    // 2.1.4+ became incompatible before API 24 due to dependency on StandardSocketOptions
-    // (DIRMINA-1123) and NetworkChannel.supportedOptions() (DIRMINA-1130).
+    // This is a dependency of org.apache.ftpserver:ftpserver-core. Kept at 2.2.4: the SSL filter
+    // rewrite in 2.2.x fixes Android SSL failures (DIRMINA-1162), and requires API 24
+    // (StandardSocketOptions, DIRMINA-1123 / NetworkChannel.supportedOptions(), DIRMINA-1130),
+    // hence minSdk 24 above.
     implementation ('org.apache.mina:mina-core') {
         version {
-            strictly '2.1.3'
+            strictly '2.2.4'
         }
     }
     // Also a dependency of jCIFS-NG.

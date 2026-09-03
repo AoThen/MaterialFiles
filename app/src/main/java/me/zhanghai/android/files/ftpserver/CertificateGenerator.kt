@@ -110,6 +110,9 @@ object CertificateGenerator {
         keystorePassword: String
     ): SslConfiguration = SslConfigurationFactory()
         .apply {
+            // Stay on TLSv1.2: MINA's SSL filter has known issues with TLS 1.3 record handling
+            // (DIRMINA-1132), and TLSv1.2 is the default protocol we want to pin explicitly.
+            setSslProtocol("TLSv1.2")
             setKeystoreFile(keystoreFile)
             setKeystoreType(KEYSTORE_TYPE)
             setKeystorePassword(keystorePassword)
