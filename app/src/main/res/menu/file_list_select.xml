@@ -35,6 +35,13 @@
         app:showAsAction="always" />
 
     <item
+        android:id="@+id/action_rename"
+        android:icon="@drawable/rename_icon_control_normal_24dp"
+        android:orderInCategory="100"
+        android:title="@string/rename"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/action_extract"
         android:orderInCategory="100"
         android:title="@string/file_list_select_action_extract"

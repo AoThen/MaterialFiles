@@ -133,7 +133,8 @@ import me.zhanghai.android.files.util.withChooser
 import me.zhanghai.android.files.viewer.image.ImageViewerActivity
 
 class FileListFragment : Fragment(), BreadcrumbLayout.Listener, FileListAdapter.Listener,
-    ConfirmReplaceFileDialogFragment.Listener, OpenApkDialogFragment.Listener,
+    BatchRenameDialogFragment.Listener, ConfirmReplaceFileDialogFragment.Listener,
+    OpenApkDialogFragment.Listener,
     ConfirmDeleteFilesDialogFragment.Listener, CreateArchiveDialogFragment.Listener,
     RenameFileDialogFragment.Listener, CreateFileDialogFragment.Listener,
     CreateDirectoryDialogFragment.Listener, NavigateToPathDialogFragment.Listener,
@@ -890,6 +891,7 @@ class FileListFragment : Fragment(), BreadcrumbLayout.Listener, FileListAdapter.
                     }
                 )
             menu.findItem(R.id.action_delete).isVisible = !isAnyFileReadOnly
+            menu.findItem(R.id.action_rename).isVisible = !isAnyFileReadOnly
             val areAllFilesArchiveFiles = files.all { it.isArchiveFile }
             menu.findItem(R.id.action_extract).isVisible = areAllFilesArchiveFiles
             val isCurrentPathReadOnly = viewModel.currentPath.fileSystem.isReadOnly
@@ -933,6 +935,10 @@ class FileListFragment : Fragment(), BreadcrumbLayout.Listener, FileListAdapter.
             }
             R.id.action_delete -> {
                 confirmDeleteFiles(viewModel.selectedFiles)
+                true
+            }
+            R.id.action_rename -> {
+                showBatchRenameDialog()
                 true
             }
             R.id.action_extract -> {
@@ -1328,6 +1334,39 @@ class FileListFragment : Fragment(), BreadcrumbLayout.Listener, FileListAdapter.
         RenameFileDialogFragment.show(file, this)
     }
 
+    private fun showBatchRenameDialog() {
+        BatchRenameDialogFragment.show(getOrderedSelectedFiles(), getDirectoryFileNames(), this)
+    }
+
+    private fun getOrderedSelectedFiles(): FileItemSet {
+        val files = viewModel.selectedFiles
+        if (files.size <= 1) {
+            return files
+        }
+        // Use the order from the adapter so that the numbering matches what the user sees.
+        return FileItemSet().apply {
+            for (index in 0..<adapter.itemCount) {
+                val file = adapter.getItem(index)
+                if (file in files) {
+                    add(file)
+                }
+            }
+        }
+    }
+
+    private fun getDirectoryFileNames(): Set<String> {
+        // Not used in search mode, nor does it cover the selections in other directories.
+        // Conflicts there are still reported by the rename job when renaming fails.
+        if (viewModel.searchState.isSearching) {
+            return emptySet()
+        }
+        val fileListData = viewModel.fileListStateful
+        if (fileListData !is Success) {
+            return emptySet()
+        }
+        return fileListData.value.mapTo(mutableSetOf()) { it.name }
+    }
+
     override fun hasFileWithName(name: String): Boolean = getFileWithName(name) != null
 
     private fun getFileWithName(name: String): FileItem? {
@@ -1341,6 +1380,11 @@ class FileListFragment : Fragment(), BreadcrumbLayout.Listener, FileListAdapter.
     override fun renameFile(file: FileItem, newName: String) {
         FileJobService.rename(file.path, newName, requireContext())
         viewModel.selectFile(file, false)
+    }
+
+    override fun onBatchRename(renames: List<Pair<Path, String>>) {
+        FileJobService.batchRename(renames, requireContext())
+        viewModel.clearSelectedFiles()
     }
 
     override fun extractFile(file: FileItem) {

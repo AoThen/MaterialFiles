@@ -123,6 +123,10 @@ class FileJobService : Service() {
             startJob(ArchiveFileJob(sources, archiveFile, format, filter, password), context)
         }
 
+        fun batchRename(renames: List<Pair<Path, String>>, context: Context) {
+            startJob(BatchRenameFileJob(renames), context)
+        }
+
         fun copy(sources: List<Path>, targetDirectory: Path, context: Context) {
             startJob(CopyFileJob(sources, targetDirectory), context)
         }

@@ -39,6 +39,27 @@ val FileItem.baseName: String
 val FileItem.extension: String
     get() = if (attributes.isDirectory) "" else name.asFileName().extensions
 
+val FileItem.extensionWithDot: String
+    get() = if (extension.isEmpty()) "" else ".$extension"
+
+fun FileItem.computeNewName(
+    find: String,
+    replace: String,
+    includeExtension: Boolean
+): String {
+    if (find.isEmpty()) {
+        return name
+    }
+    return if (includeExtension || baseName.isEmpty()) {
+        name.replace(find, replace)
+    } else {
+        baseName.replace(find, replace) + extensionWithDot
+    }
+}
+
+fun computeNumberedName(newName: String, start: Int, paddingWidth: Int, index: Int): String =
+    newName + (start + index).toString().padStart(paddingWidth, '0')
+
 fun FileItem.getMimeTypeName(context: Context): String {
         if (attributesNoFollowLinks.isSymbolicLink && isSymbolicLinkBroken) {
             return MimeType.getBrokenSymbolicLinkName(context)

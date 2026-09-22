@@ -601,6 +601,7 @@ private class ActionAllInfo(
     var skipReplace: Boolean = false,
     var skipCopyMoveError: Boolean = false,
     var skipDeleteError: Boolean = false,
+    var skipRenameError: Boolean = false,
     var skipRestoreSeLinuxContextError: Boolean = false,
     var skipSetGroupError: Boolean = false,
     var skipSetOwnerError: Boolean = false,
@@ -1583,6 +1584,107 @@ private fun FileJob.rename(path: Path, newPath: Path) {
             }
         }
     } while (retry)
+}
+
+class BatchRenameFileJob(
+    private val renames: List<Pair<Path, String>>
+) : FileJob() {
+    @Throws(IOException::class)
+    override fun run() {
+        val scanInfo = ScanInfo().apply { renames.forEach { incrementFileCount() } }
+        val transferInfo = TransferInfo(scanInfo, null)
+        val actionAllInfo = ActionAllInfo()
+        var renamedCount = 0
+        for ((path, newName) in renames) {
+            if (batchRename(path, newName, transferInfo, actionAllInfo)) {
+                ++renamedCount
+            }
+            throwIfInterrupted()
+        }
+        showToast(
+            getString(
+                R.string.file_job_rename_success_format, renamedCount,
+                renames.size - renamedCount
+            )
+        )
+    }
+}
+
+@Throws(InterruptedIOException::class)
+private fun FileJob.batchRename(
+    path: Path,
+    newName: String,
+    transferInfo: TransferInfo,
+    actionAllInfo: ActionAllInfo
+): Boolean {
+    if (actionAllInfo.skipRenameError) {
+        transferInfo.skipFileIgnoringSize()
+        postRenameNotification(transferInfo, path)
+        return false
+    }
+    val newPath = path.resolveSibling(newName)
+    var retry: Boolean
+    do {
+        retry = false
+        try {
+            moveAtomically(path, newPath)
+            transferInfo.incrementTransferredFileCount()
+            postRenameNotification(transferInfo, path)
+            return true
+        } catch (e: InterruptedIOException) {
+            throw e
+        } catch (e: IOException) {
+            e.printStackTrace()
+            if (e is UserActionRequiredException) {
+                val result = showUserAction(e)
+                if (result) {
+                    retry = true
+                    continue
+                }
+            }
+            val result = showErrorDialog(
+                getString(R.string.file_job_rename_error_title_format, getFileName(path)),
+                getString(
+                    R.string.file_job_rename_error_message_format, getFileName(newPath),
+                    e.toString()
+                ),
+                getReadOnlyFileStore(path, e),
+                true,
+                getString(R.string.retry),
+                getString(R.string.skip),
+                getString(android.R.string.cancel)
+            )
+            when (result.action) {
+                FileJobErrorAction.POSITIVE -> {
+                    retry = true
+                    continue
+                }
+                FileJobErrorAction.NEGATIVE -> {
+                    if (result.isAll) {
+                        actionAllInfo.skipRenameError = true
+                    }
+                    transferInfo.skipFileIgnoringSize()
+                    postRenameNotification(transferInfo, path)
+                    return false
+                }
+                FileJobErrorAction.CANCELED -> {
+                    transferInfo.skipFileIgnoringSize()
+                    postRenameNotification(transferInfo, path)
+                    return false
+                }
+                FileJobErrorAction.NEUTRAL -> throw InterruptedIOException()
+                else -> throw AssertionError(result.action)
+            }
+        }
+    } while (retry)
+    return false
+}
+
+private fun FileJob.postRenameNotification(transferInfo: TransferInfo, currentPath: Path) {
+    postTransferCountNotification(
+        transferInfo, currentPath, R.string.file_job_rename_notification_title_one_format,
+        R.plurals.file_job_rename_notification_title_multiple_format
+    )
 }
 
 class RestoreFileSeLinuxContextJob(
