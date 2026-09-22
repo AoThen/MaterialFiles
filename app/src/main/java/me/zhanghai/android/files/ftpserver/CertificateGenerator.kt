@@ -6,11 +6,14 @@
 package me.zhanghai.android.files.ftpserver
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Base64
 import androidx.core.content.edit
 import me.zhanghai.android.files.provider.sftp.client.SecurityProviderHelper
+import me.zhanghai.android.files.util.getLocalAddress
 import java.io.File
 import java.math.BigInteger
+import java.net.InetAddress
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.SecureRandom
@@ -20,9 +23,14 @@ import java.util.Date
 import org.apache.ftpserver.FtpServerConfigurationException
 import org.apache.ftpserver.ssl.SslConfiguration
 import org.apache.ftpserver.ssl.SslConfigurationFactory
+import org.bouncycastle.asn1.DEROctetString
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.BasicConstraints
+import org.bouncycastle.asn1.x509.ExtendedKeyUsage
 import org.bouncycastle.asn1.x509.Extension
+import org.bouncycastle.asn1.x509.GeneralName
+import org.bouncycastle.asn1.x509.GeneralNames
+import org.bouncycastle.asn1.x509.KeyPurposeId
 import org.bouncycastle.asn1.x509.KeyUsage
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
@@ -34,6 +42,7 @@ object CertificateGenerator {
     private const val KEYSTORE_TYPE = "PKCS12"
     private const val KEYSTORE_PASSWORD_PREFERENCE_NAME = "ftp_server_keystore"
     private const val KEYSTORE_PASSWORD_PREFERENCE_KEY = "password"
+    private const val KEYSTORE_IP_PREFERENCE_KEY = "ip"
     private const val KEY_ALIAS = "materialfiles"
     private const val KEY_SIZE = 2048
     private const val NOT_BEFORE_OFFSET_DAYS = 1L
@@ -42,25 +51,33 @@ object CertificateGenerator {
 
     fun getSslConfiguration(context: Context): SslConfiguration {
         SecurityProviderHelper.init()
+        val sharedPreferences = context.getSharedPreferences(
+            KEYSTORE_PASSWORD_PREFERENCE_NAME, Context.MODE_PRIVATE
+        )
         val keystoreFile = File(context.filesDir, KEYSTORE_FILE_NAME)
-        val keystorePassword = getOrCreateKeystorePassword(context)
-        if (!keystoreFile.exists()) {
-            createKeystore(keystoreFile, keystorePassword)
+        val keystorePassword = getOrCreateKeystorePassword(sharedPreferences)
+        val ipAddress = InetAddress::class.getLocalAddress()
+        val ipAddressString = ipAddress?.hostAddress.orEmpty()
+        val storedIpAddressString = sharedPreferences.getString(KEYSTORE_IP_PREFERENCE_KEY, null)
+        // The certificate is regenerated when the local IP address changes, so that the subject
+        // alternative names match the address clients connect to. When the IP address is unknown,
+        // the existing certificate is kept.
+        if (!keystoreFile.exists() ||
+            (ipAddressString.isNotEmpty() && storedIpAddressString != ipAddressString)) {
+            createKeystore(keystoreFile, keystorePassword, ipAddress)
+            sharedPreferences.edit { putString(KEYSTORE_IP_PREFERENCE_KEY, ipAddressString) }
         }
         return try {
             createSslConfiguration(keystoreFile, keystorePassword)
         } catch (e: FtpServerConfigurationException) {
             // Keystore is corrupt, so we regenerate it.
             keystoreFile.delete()
-            createKeystore(keystoreFile, keystorePassword)
+            createKeystore(keystoreFile, keystorePassword, ipAddress)
             createSslConfiguration(keystoreFile, keystorePassword)
         }
     }
 
-    private fun getOrCreateKeystorePassword(context: Context): String {
-        val sharedPreferences = context.getSharedPreferences(
-            KEYSTORE_PASSWORD_PREFERENCE_NAME, Context.MODE_PRIVATE
-        )
+    private fun getOrCreateKeystorePassword(sharedPreferences: SharedPreferences): String {
         val existingPassword = sharedPreferences.getString(KEYSTORE_PASSWORD_PREFERENCE_KEY, null)
         if (existingPassword != null) {
             return existingPassword
@@ -74,7 +91,11 @@ object CertificateGenerator {
         return password
     }
 
-    private fun createKeystore(keystoreFile: File, keystorePassword: String) {
+    private fun createKeystore(
+        keystoreFile: File,
+        keystorePassword: String,
+        ipAddress: InetAddress?
+    ) {
         val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
         keyPairGenerator.initialize(KEY_SIZE)
         val keyPair = keyPairGenerator.generateKeyPair()
@@ -91,6 +112,14 @@ object CertificateGenerator {
                 Extension.keyUsage, true,
                 KeyUsage(KeyUsage.digitalSignature or KeyUsage.keyEncipherment)
             )
+            .addExtension(
+                Extension.extendedKeyUsage, true,
+                ExtendedKeyUsage(KeyPurposeId.id_kp_serverAuth)
+            )
+            .addExtension(
+                Extension.subjectAlternativeName, true,
+                createSubjectAlternativeNames(ipAddress)
+            )
             .build(JcaContentSignerBuilder("SHA256withRSA").build(keyPair.private))
         val certificate = JcaX509CertificateConverter()
             .setProvider(BouncyCastleProvider.PROVIDER_NAME)
@@ -103,6 +132,22 @@ object CertificateGenerator {
         keystoreFile.outputStream().use {
             keyStore.store(it, keystorePassword.toCharArray())
         }
+    }
+
+    private fun createSubjectAlternativeNames(ipAddress: InetAddress?): GeneralNames {
+        val generalNames = mutableListOf(
+            GeneralName(GeneralName.dNSName, "localhost"),
+            GeneralName(
+                GeneralName.iPAddress,
+                DEROctetString.withContents(InetAddress.getLoopbackAddress().address)
+            )
+        )
+        ipAddress?.let {
+            generalNames += GeneralName(
+                GeneralName.iPAddress, DEROctetString.withContents(it.address)
+            )
+        }
+        return GeneralNames(generalNames.toTypedArray())
     }
 
     private fun createSslConfiguration(
