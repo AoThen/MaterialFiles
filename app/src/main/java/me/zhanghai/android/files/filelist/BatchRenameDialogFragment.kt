@@ -130,8 +130,10 @@ class BatchRenameDialogFragment : AppCompatDialogFragment() {
                     plan.file.name + separator + plan.newName + ": " + problemMessage(plan)
                 }
         }
-        dialog?.getButton(AlertDialog.BUTTON_POSITIVE)?.isEnabled =
-            plans.any { it.needsRename && !it.hasProblem }
+        val positiveButton = (dialog as? AlertDialog)?.getButton(
+            AlertDialog.BUTTON_POSITIVE
+        )
+        positiveButton?.isEnabled = plans.any { it.needsRename && !it.hasProblem }
     }
 
     private fun problemMessage(plan: Plan): String {
