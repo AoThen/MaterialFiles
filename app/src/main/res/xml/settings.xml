@@ -107,5 +107,9 @@
             android:key="@string/pref_key_read_remote_files_for_thumbnail"
             android:title="@string/settings_read_remote_files_for_thumbnail_title"
             android:defaultValue="@bool/pref_default_value_read_remote_files_for_thumbnail" />
+
+        <me.zhanghai.android.files.settings.CrashLogsPreference
+            android:title="@string/settings_crash_logs_title"
+            android:summary="@string/settings_crash_logs_summary" />
     </PreferenceCategory>
 </PreferenceScreen>

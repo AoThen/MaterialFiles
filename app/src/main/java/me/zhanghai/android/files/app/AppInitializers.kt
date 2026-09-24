@@ -11,6 +11,8 @@ import android.webkit.WebView
 import jcifs.context.SingletonContext
 import me.zhanghai.android.files.BuildConfig
 import me.zhanghai.android.files.coil.initializeCoil
+import me.zhanghai.android.files.crashlog.CrashLogHandler
+import me.zhanghai.android.files.crashlog.ErrorLogTee
 import me.zhanghai.android.files.filejob.fileJobNotificationTemplate
 import me.zhanghai.android.files.ftpserver.ftpServerServiceNotificationTemplate
 import me.zhanghai.android.files.hiddenapi.HiddenApi
@@ -30,7 +32,10 @@ import me.zhanghai.android.files.provider.smb.client.Client as SmbClient
 import me.zhanghai.android.files.provider.webdav.client.Client as WebDavClient
 
 val appInitializers = listOf(
+    ::installErrorLogTee,
     ::initializeFirebase,
+    // Must run after Firebase so the Crashlytics (or system) handler is captured and chained.
+    ::installCrashHandler,
     ::disableHiddenApiChecks,
     ::initializeWebViewDebugging,
     ::initializeCoil,
@@ -42,10 +47,18 @@ val appInitializers = listOf(
     ::createNotificationChannels
 )
 
+private fun installErrorLogTee() {
+    ErrorLogTee.install()
+}
+
 private fun initializeFirebase() {
 //#ifdef NONFREE
     me.zhanghai.android.files.nonfree.FirebaseInitializer.initialize()
 //#endif
+}
+
+private fun installCrashHandler() {
+    CrashLogHandler.install()
 }
 
 private fun disableHiddenApiChecks() {

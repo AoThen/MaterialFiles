@@ -819,6 +819,19 @@
     <string name="settings_show_pdf_thumbnail_pre_28_summary">Might make the app unstable on older versions of Android</string>
     <string name="settings_read_remote_files_for_thumbnail_title">Read remote files for thumbnail</string>
 
+    <string name="settings_crash_logs_title">Crash logs</string>
+    <string name="settings_crash_logs_summary">View and clear crash logs and runtime error logs</string>
+    <string name="settings_crash_logs_list_empty">No crash logs</string>
+    <string name="settings_crash_logs_clear">Clear</string>
+    <string name="settings_crash_logs_clear_title">Clear all logs?</string>
+    <string name="settings_crash_logs_clear_message">This will delete all crash logs and runtime error logs.</string>
+    <string name="settings_crash_logs_item_info_format">%1$s, %2$s</string>
+    <string name="settings_crash_logs_read_failed">Failed to read log</string>
+    <string name="settings_runtime_log_title">Runtime error log</string>
+    <string name="settings_crash_notify_title">App crashed</string>
+    <string name="settings_crash_notify_message">The app crashed the last time it was used. View the crash log to report the problem?</string>
+    <string name="settings_crash_notify_yes">View</string>
+
     <string name="about_title">About</string>
     <string name="about_version_title">Version</string>
     <string name="about_system_version_title">System</string>

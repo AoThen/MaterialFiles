@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContract
 import androidx.fragment.app.commit
 import java8.nio.file.Path
 import me.zhanghai.android.files.app.AppActivity
+import me.zhanghai.android.files.crashlog.CrashLogs
 import me.zhanghai.android.files.file.MimeType
 import me.zhanghai.android.files.util.createIntent
 import me.zhanghai.android.files.util.extraPath
@@ -33,6 +34,10 @@ class FileListActivity : AppActivity() {
         } else {
             fragment = supportFragmentManager.findFragmentById(android.R.id.content)
                 as FileListFragment
+        }
+        val action = intent?.action
+        if (action == null || action == Intent.ACTION_MAIN) {
+            CrashLogs.notifyAppCrash(this)
         }
     }
 

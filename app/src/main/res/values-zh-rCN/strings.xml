@@ -634,6 +634,19 @@
     <string name="settings_show_pdf_thumbnail_pre_28_summary">可能导致应用在旧版 Android 上不稳定</string>
     <string name="settings_read_remote_files_for_thumbnail_title">读取远程文件以显示缩略图</string>
 
+    <string name="settings_crash_logs_title">崩溃日志</string>
+    <string name="settings_crash_logs_summary">查看和清除崩溃日志与运行时错误日志</string>
+    <string name="settings_crash_logs_list_empty">无崩溃日志</string>
+    <string name="settings_crash_logs_clear">清空</string>
+    <string name="settings_crash_logs_clear_title">清除所有日志？</string>
+    <string name="settings_crash_logs_clear_message">这将删除所有崩溃日志和运行时错误日志。</string>
+    <string name="settings_crash_logs_item_info_format">%1$s，%2$s</string>
+    <string name="settings_crash_logs_read_failed">读取日志失败</string>
+    <string name="settings_runtime_log_title">运行时错误日志</string>
+    <string name="settings_crash_notify_title">应用已崩溃</string>
+    <string name="settings_crash_notify_message">上次使用时应用发生崩溃。是否查看崩溃日志以便报告问题？</string>
+    <string name="settings_crash_notify_yes">查看</string>
+
     <string name="about_title">关于</string>
     <string name="about_version_title">版本</string>
     <string name="about_system_version_title">系统版本</string>
