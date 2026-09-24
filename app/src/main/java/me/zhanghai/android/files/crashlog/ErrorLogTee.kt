@@ -230,7 +230,7 @@ object ErrorLogTee {
         }
     }
 
-    private inner class TeeOutputStream(private val original: OutputStream) : OutputStream() {
+    private class TeeOutputStream(private val original: OutputStream) : OutputStream() {
         override fun write(b: Int) {
             runCatching { original.write(b) }
             appendByte(b)
@@ -239,7 +239,7 @@ object ErrorLogTee {
         override fun write(b: ByteArray, off: Int, len: Int) {
             runCatching { original.write(b, off, len) }
             for (index in 0 until len) {
-                appendByte(b[off + index])
+                appendByte(b[off + index].toInt() and 0xFF)
             }
         }
     }
