@@ -151,7 +151,7 @@ private fun FileJob.postNotification(
 
 private const val PROGRESS_INTERVAL_MILLIS = 200L
 
-private const val NOTIFICATION_INTERVAL_MILLIS = 500L
+private const val NOTIFICATION_INTERVAL_MILLIS = 200L
 
 private fun FileJob.showToast(textRes: Int, duration: Int = Toast.LENGTH_SHORT) {
     service.mainExecutorCompat.execute {
@@ -341,9 +341,10 @@ private fun FileJob.postTransferSizeNotification(
     transferInfo: TransferInfo,
     currentSource: Path,
     @StringRes titleOneRes: Int,
-    @PluralsRes titleMultipleRes: Int
+    @PluralsRes titleMultipleRes: Int,
+    force: Boolean = false
 ) {
-    if (!transferInfo.shouldPostNotification()) {
+    if (!transferInfo.shouldPostNotification(force)) {
         return
     }
     val title: String
@@ -469,9 +470,18 @@ private class TransferInfo(scanInfo: ScanInfo, val target: Path?) {
         transferredSize += size
     }
 
-    fun shouldPostNotification(): Boolean {
+    fun subtractFromTransferredSize(size: Long) {
+        transferredSize -= size
+    }
+
+    fun isComplete(): Boolean = transferredFileCount >= fileCount
+
+    fun shouldPostNotification(force: Boolean = false): Boolean {
         val currentTimeMillis = System.currentTimeMillis()
-        return if (lastNotificationTimeMillis + NOTIFICATION_INTERVAL_MILLIS < currentTimeMillis) {
+        return if (force) {
+            lastNotificationTimeMillis = currentTimeMillis
+            true
+        } else if (lastNotificationTimeMillis + NOTIFICATION_INTERVAL_MILLIS < currentTimeMillis) {
             lastNotificationTimeMillis = currentTimeMillis
             true
         } else {
@@ -727,7 +737,8 @@ private fun FileJob.archive(
 private fun FileJob.postArchiveNotification(transferInfo: TransferInfo, currentFile: Path) {
     postTransferSizeNotification(
         transferInfo, currentFile, R.string.file_job_archive_notification_title_one_format,
-        R.plurals.file_job_archive_notification_title_multiple_format
+        R.plurals.file_job_archive_notification_title_multiple_format,
+        force = transferInfo.isComplete()
     )
 }
 
@@ -1290,6 +1301,7 @@ private fun FileJob.copyOrMove(
                 postCopyMoveNotification(transferInfo, source, type)
             }
         }.toTypedArray()
+        val transferredSizeBefore = transferInfo.transferredSize
         try {
             postCopyMoveNotification(transferInfo, source, type)
             if (useCopy) {
@@ -1378,6 +1390,10 @@ private fun FileJob.copyOrMove(
             throw e
         } catch (e: IOException) {
             e.printStackTrace()
+            val partialBytes = transferInfo.transferredSize - transferredSizeBefore
+            if (partialBytes > 0) {
+                transferInfo.subtractFromTransferredSize(partialBytes)
+            }
             if (actionAllInfo.skipCopyMoveError) {
                 transferInfo.skipFile(source)
                 postCopyMoveNotification(transferInfo, source, type)
@@ -1450,7 +1466,8 @@ private fun FileJob.postCopyMoveNotification(
             R.plurals.file_job_copy_notification_title_multiple_format,
             R.plurals.file_job_extract_notification_title_multiple_format,
             R.plurals.file_job_move_notification_title_multiple_format
-        )
+        ),
+        force = transferInfo.isComplete()
     )
 }
 
