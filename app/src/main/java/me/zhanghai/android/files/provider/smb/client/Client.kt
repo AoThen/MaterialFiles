@@ -28,6 +28,7 @@ import com.hierynomus.smbj.SmbConfig
 import com.hierynomus.smbj.session.Session
 import com.hierynomus.smbj.share.Directory
 import com.hierynomus.smbj.share.DiskShare
+import com.hierynomus.smbj.share.File
 import com.hierynomus.smbj.share.PipeShare
 import com.hierynomus.smbj.share.PrinterShare
 import com.hierynomus.smbj.share.Share
@@ -354,7 +355,7 @@ object Client {
             throw ClientException(e)
         }
         try {
-            sourceFile.use {
+            try {
                 val attributesToCopy = if (copyAttributes) {
                     val sourceAttributes = try {
                         sourceFile.getFileInformation(FileBasicInformation::class.java)
@@ -377,7 +378,7 @@ object Client {
                 } catch (e: SMBRuntimeException) {
                     throw ClientException(e)
                 }
-                targetFile.use {
+                try {
                     var successful = false
                     try {
                         if (sourceSession == targetSession) {
@@ -415,7 +416,11 @@ object Client {
                             }
                         }
                     }
+                } finally {
+                    closeNoWait(targetFile)
                 }
+            } finally {
+                closeNoWait(sourceFile)
             }
         } catch (e: SMBRuntimeException) {
             throw ClientException(e)
@@ -662,6 +667,14 @@ object Client {
     private fun getDiskShare(session: Session, shareName: String): DiskShare =
         getShare(session, shareName) as? DiskShare
             ?: throw ClientException("$shareName is not a DiskShare")
+
+    private fun closeNoWait(file: File) {
+        try {
+            file.closeNoWait()
+        } catch (e: SMBRuntimeException) {
+            e.printStackTrace()
+        }
+    }
 
     interface Path {
         val authority: Authority

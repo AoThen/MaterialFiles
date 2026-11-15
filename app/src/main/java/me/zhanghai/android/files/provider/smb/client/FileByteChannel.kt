@@ -18,7 +18,6 @@ import me.zhanghai.android.files.provider.common.map
 import me.zhanghai.android.files.util.closeSafe
 import me.zhanghai.android.files.util.findCauseByClass
 import java.io.IOException
-import java.io.InterruptedIOException
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousCloseException
 import java.nio.channels.ClosedByInterruptException
@@ -109,16 +108,11 @@ class FileByteChannel(
             else -> IOException(this)
         }
 
-    @Throws(IOException::class)
     override fun onClose() {
         try {
-            file.close()
+            file.closeNoWait()
         } catch (e: SMBRuntimeException) {
-            throw when {
-                e.findCauseByClass<InterruptedException>() != null ->
-                    InterruptedIOException().apply { initCause(e) }
-                else -> IOException(e)
-            }
+            e.printStackTrace()
         }
     }
 

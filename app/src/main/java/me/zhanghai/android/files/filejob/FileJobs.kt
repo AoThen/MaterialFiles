@@ -149,9 +149,9 @@ private fun FileJob.postNotification(
     service.notificationManager.notify(id, notification)
 }
 
-private const val PROGRESS_INTERVAL_MILLIS = 200L
+private const val PROGRESS_INTERVAL_MILLIS = 100L
 
-private const val NOTIFICATION_INTERVAL_MILLIS = 200L
+private const val NOTIFICATION_INTERVAL_MILLIS = 100L
 
 private fun FileJob.showToast(textRes: Int, duration: Int = Toast.LENGTH_SHORT) {
     service.mainExecutorCompat.execute {
