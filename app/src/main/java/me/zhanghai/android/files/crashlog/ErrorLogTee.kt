@@ -84,9 +84,9 @@ object ErrorLogTee {
             }
             val file = files[index]
             val segment = runCatching { readFileTail(file, remaining) }.getOrNull() ?: continue
-            val isPartial = segment.second
-            segments.addFirst(segment.first)
-            remaining -= segment.first.toByteArray(Charsets.UTF_8).size
+            val (text, byteCount, isPartial) = segment
+            segments.addFirst(text)
+            remaining -= byteCount
             if (isPartial) {
                 truncatedStart = true
                 break
@@ -105,16 +105,17 @@ object ErrorLogTee {
         return text
     }
 
-    /** Returns (text, isPartial) where isPartial means the read started mid-file. */
-    private fun readFileTail(file: File, maxBytes: Long): Pair<String, Boolean> {
+    /** Returns (text, byteCount, isPartial) where isPartial means the read started mid-file. */
+    private fun readFileTail(file: File, maxBytes: Long): Triple<String, Int, Boolean> {
         val length = file.length()
         if (length <= 0) {
-            return "" to false
+            return Triple("", 0, false)
         }
         if (length <= maxBytes) {
-            return file.readText() to false
+            val bytes = file.readBytes()
+            return Triple(String(bytes, Charsets.UTF_8), bytes.size, false)
         }
-        return file.inputStream().use { input ->
+        val bytes = file.inputStream().use { input ->
             var toSkip = length - maxBytes
             while (toSkip > 0) {
                 val skipped = input.skip(toSkip)
@@ -123,9 +124,9 @@ object ErrorLogTee {
                 }
                 toSkip -= skipped
             }
-            val bytes = input.readBytes()
-            String(bytes, Charsets.UTF_8) to true
+            input.readBytes()
         }
+        return Triple(String(bytes, Charsets.UTF_8), bytes.size, true)
     }
 
     fun clear() {
@@ -174,23 +175,36 @@ object ErrorLogTee {
 
     private fun appendByte(byte: Int) {
         synchronized(lock) {
-            if (writesDisabled) {
-                // Allow day rollover to re-enable writes after rotation exhaustion / IO error.
-                val today = dayFormat.format(Date())
-                if (today != currentDay) {
-                    ensureOpenForTodayUnsafe()
-                }
-                if (writesDisabled) {
-                    return
-                }
+            appendByteLocked(byte)
+        }
+    }
+
+    private fun appendBytes(bytes: ByteArray, offset: Int, length: Int) {
+        synchronized(lock) {
+            for (index in 0 until length) {
+                appendByteLocked(bytes[offset + index].toInt() and 0xFF)
             }
-            if (byte == '\n'.code) {
+        }
+    }
+
+    /** Must be called while holding [lock]. */
+    private fun appendByteLocked(byte: Int) {
+        if (writesDisabled) {
+            // Allow day rollover to re-enable writes after rotation exhaustion / IO error.
+            val today = dayFormat.format(Date())
+            if (today != currentDay) {
+                ensureOpenForTodayUnsafe()
+            }
+            if (writesDisabled) {
+                return
+            }
+        }
+        if (byte == '\n'.code) {
+            flushLineUnsafe()
+        } else {
+            lineBytes.write(byte)
+            if (lineBytes.size() > 8192) {
                 flushLineUnsafe()
-            } else {
-                lineBytes.write(byte)
-                if (lineBytes.size() > 8192) {
-                    flushLineUnsafe()
-                }
             }
         }
     }
@@ -238,9 +252,7 @@ object ErrorLogTee {
 
         override fun write(b: ByteArray, off: Int, len: Int) {
             runCatching { original.write(b, off, len) }
-            for (index in 0 until len) {
-                appendByte(b[off + index].toInt() and 0xFF)
-            }
+            appendBytes(b, off, len)
         }
     }
 }

@@ -15,6 +15,7 @@ class AppsListActivity : AppActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Calls ensureSubDecor().
         findViewById<View>(android.R.id.content)
         if (savedInstanceState == null) {
             supportFragmentManager.commit { add<AppsListFragment>(android.R.id.content) }

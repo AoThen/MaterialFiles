@@ -72,7 +72,7 @@ class BatchRenameDialogFragment : AppCompatDialogFragment() {
             .setNegativeButton(android.R.string.cancel, null)
             .create()
             .apply {
-                window!!.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+                window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
                 setOnShowListener {
                     updatePreview()
                     getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { onOk() }

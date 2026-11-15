@@ -35,15 +35,13 @@ class AppsListFragment : Fragment() {
 
     private val viewModel by viewModels { { AppsListViewModel() } }
 
+    private var pendingSearchQuery = ""
+
     private val debouncedSearchRunnable = DebouncedRunnable(Handler(Looper.getMainLooper()), 1000) {
         if (!isResumed) {
             return@DebouncedRunnable
         }
-        val query = viewModel.searchQuery
-        if (query.isEmpty()) {
-            return@DebouncedRunnable
-        }
-        viewModel.setSearchQuery(query)
+        viewModel.setSearchQuery(pendingSearchQuery)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -124,12 +122,14 @@ class AppsListFragment : Fragment() {
         val searchView = menuBinding.searchItem.actionView as FixQueryChangeSearchView
         searchView.setOnSearchClickListener {
             searchView.setQuery(viewModel.searchQuery, false)
+            pendingSearchQuery = viewModel.searchQuery
             debouncedSearchRunnable()
         }
         menuBinding.searchItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem): Boolean = true
 
             override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
+                pendingSearchQuery = ""
                 viewModel.setSearchQuery("")
                 return true
             }
@@ -137,6 +137,7 @@ class AppsListFragment : Fragment() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 debouncedSearchRunnable.cancel()
+                pendingSearchQuery = query
                 viewModel.setSearchQuery(query)
                 return true
             }
@@ -145,6 +146,7 @@ class AppsListFragment : Fragment() {
                 if (searchView.shouldIgnoreQueryChange) {
                     return false
                 }
+                pendingSearchQuery = query
                 debouncedSearchRunnable()
                 return false
             }
