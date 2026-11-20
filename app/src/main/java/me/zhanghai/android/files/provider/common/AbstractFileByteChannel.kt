@@ -300,7 +300,7 @@ abstract class AbstractFileByteChannel(
         private fun cancelPendingReads() {
             synchronized(pendingReadLock) {
                 while (pendingReads.isNotEmpty()) {
-                    val future = pendingReads.removeFirst()
+                    val (_, future) = pendingReads.removeFirst()
                     if (shouldCancelRead) {
                         future.cancel(true)
                         if (joinCancelledRead) {
