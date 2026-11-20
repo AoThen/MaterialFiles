@@ -352,7 +352,7 @@ private fun FileJob.postTransferSizeNotification(
     val fileCount = transferInfo.fileCount
     val target = transferInfo.target!!
     val size = transferInfo.size
-    val transferredSize = transferInfo.transferredSize
+    val transferredSize = transferInfo.displayedTransferredSize().coerceAtMost(size)
     if (fileCount == 1) {
         title = getString(titleOneRes, getFileName(currentSource), getFileName(target))
         val sizeString = size.asFileSize().formatHumanReadable(service)
@@ -433,6 +433,8 @@ private class TransferInfo(scanInfo: ScanInfo, val target: Path?) {
         private set
     var transferredSize = 0L
         private set
+    var displayedSize = 0L
+        private set
 
     private var lastNotificationTimeMillis = 0L
 
@@ -460,6 +462,7 @@ private class TransferInfo(scanInfo: ScanInfo, val target: Path?) {
         } catch (e: IOException) {
             e.printStackTrace()
         }
+        displayedSize = transferredSize.coerceAtMost(size)
     }
 
     fun skipFileIgnoringSize() {
@@ -472,6 +475,13 @@ private class TransferInfo(scanInfo: ScanInfo, val target: Path?) {
 
     fun subtractFromTransferredSize(size: Long) {
         transferredSize -= size
+    }
+
+    fun displayedTransferredSize(): Long {
+        if (transferredSize > displayedSize) {
+            displayedSize = transferredSize
+        }
+        return displayedSize
     }
 
     fun isComplete(): Boolean = transferredFileCount >= fileCount

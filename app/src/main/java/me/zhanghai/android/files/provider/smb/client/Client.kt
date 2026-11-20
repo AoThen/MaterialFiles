@@ -60,6 +60,7 @@ object Client {
         SmbConfig.builder()
             .withReadBufferSize(512 * 1024)
             .withWriteBufferSize(512 * 1024)
+            .withSoTimeout(45, TimeUnit.SECONDS)
             .withTransactTimeout(30, TimeUnit.SECONDS)
             .build()
     )
