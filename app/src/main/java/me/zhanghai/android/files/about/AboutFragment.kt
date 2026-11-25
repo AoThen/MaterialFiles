@@ -42,12 +42,10 @@ class AboutFragment : Fragment() {
         binding.licensesLayout.setOnClickListener { LicensesDialogFragment.show(this) }
         binding.systemVersionText.text =
             getString(R.string.about_system_version_format, Build.VERSION.RELEASE, Build.VERSION.SDK_INT)
-//#ifdef NONFREE
         binding.privacyPolicyLayout.isVisible = true
         binding.privacyPolicyLayout.setOnClickListener {
             startActivitySafe(PRIVACY_POLICY_URI.createViewIntent())
         }
-//#endif
         binding.authorNameLayout.setOnClickListener {
             startActivitySafe(AUTHOR_RESUME_URI.createViewIntent())
         }

@@ -33,8 +33,6 @@ import me.zhanghai.android.files.provider.webdav.client.Client as WebDavClient
 
 val appInitializers = listOf(
     ::installErrorLogTee,
-    ::initializeFirebase,
-    // Must run after Firebase so the Crashlytics (or system) handler is captured and chained.
     ::installCrashHandler,
     ::disableHiddenApiChecks,
     ::initializeWebViewDebugging,
@@ -49,12 +47,6 @@ val appInitializers = listOf(
 
 private fun installErrorLogTee() {
     ErrorLogTee.install()
-}
-
-private fun initializeFirebase() {
-//#ifdef NONFREE
-    me.zhanghai.android.files.nonfree.FirebaseInitializer.initialize()
-//#endif
 }
 
 private fun installCrashHandler() {

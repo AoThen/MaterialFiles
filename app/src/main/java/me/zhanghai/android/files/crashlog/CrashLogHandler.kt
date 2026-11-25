@@ -8,9 +8,8 @@ package me.zhanghai.android.files.crashlog
 import android.os.Process
 
 /**
- * Global uncaught exception handler. Must be installed **after** Firebase/Crashlytics so that
- * the previously registered handler (Crashlytics or the system default) is captured and
- * delegated to after the local crash log is written.
+ * Global uncaught exception handler. Captures the previously registered handler (the system
+ * default) and delegates to it after the local crash log is written.
  */
 object CrashLogHandler : Thread.UncaughtExceptionHandler {
     private var installed = false
