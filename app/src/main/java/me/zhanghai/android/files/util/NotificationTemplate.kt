@@ -27,7 +27,8 @@ class NotificationTemplate(
     val onlyAlertOnce: Boolean? = null,
     val autoCancel: Boolean? = null,
     val category: String? = null,
-    val priority: Int? = null
+    val priority: Int? = null,
+    val foregroundServiceBehavior: Int? = null
 ) {
     fun createBuilder(context: Context): NotificationCompat.Builder =
         NotificationCompat.Builder(context, channelTemplate.id).apply {
@@ -40,6 +41,7 @@ class NotificationTemplate(
             autoCancel?.let { setAutoCancel(it) }
             category?.let { setCategory(it) }
             this@NotificationTemplate.priority?.let { priority = it }
+            foregroundServiceBehavior?.let { setForegroundServiceBehavior(it) }
         }
 }
 

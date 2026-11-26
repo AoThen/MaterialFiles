@@ -151,7 +151,10 @@ private fun FileJob.postNotification(
 
 private const val PROGRESS_INTERVAL_MILLIS = 100L
 
-private const val NOTIFICATION_INTERVAL_MILLIS = 100L
+// Keep the notification update rate below the platform's default limit (5 updates per second,
+// see NotificationManagerService.DEFAULT_MAX_NOTIFICATION_ENQUEUE_RATE), otherwise updates may
+// be shed and the progress bar can appear to jump or stop early.
+private const val NOTIFICATION_INTERVAL_MILLIS = 250L
 
 private fun FileJob.showToast(textRes: Int, duration: Int = Toast.LENGTH_SHORT) {
     service.mainExecutorCompat.execute {
@@ -237,12 +240,16 @@ private fun FileJob.throwIfInterrupted() {
 private fun FileJob.scan(sources: List<Path?>, @PluralsRes notificationTitleRes: Int): ScanInfo {
     val scanInfo = ScanInfo()
     for (source in sources) {
+        val directoryStack = ArrayDeque<ScanDirectoryEntry>()
         Files.walkFileTree(source, object : SimpleFileVisitor<Path>() {
             @Throws(IOException::class)
             override fun preVisitDirectory(
                 directory: Path,
                 attributes: BasicFileAttributes
             ): FileVisitResult {
+                directoryStack.addLast(
+                    ScanDirectoryEntry(directory, scanInfo.size, scanInfo.fileCount)
+                )
                 scanPath(attributes, scanInfo, notificationTitleRes)
                 throwIfInterrupted()
                 return FileVisitResult.CONTINUE
@@ -260,11 +267,33 @@ private fun FileJob.scan(sources: List<Path?>, @PluralsRes notificationTitleRes:
                 // TODO: Prompt retry, skip, skip-all or abort.
                 return super.visitFileFailed(file, exception)
             }
+
+            @Throws(IOException::class)
+            override fun postVisitDirectory(
+                directory: Path,
+                exception: IOException?
+            ): FileVisitResult {
+                val entry = directoryStack.removeLast()
+                if (exception != null) {
+                    throw exception
+                }
+                scanInfo.setDirectorySubtreeInfo(
+                    entry.directory, scanInfo.size - entry.sizeBefore,
+                    scanInfo.fileCount - entry.fileCountBefore
+                )
+                return FileVisitResult.CONTINUE
+            }
         })
     }
     postScanNotification(scanInfo, notificationTitleRes)
     return scanInfo
 }
+
+private class ScanDirectoryEntry(
+    val directory: Path,
+    val sizeBefore: Long,
+    val fileCountBefore: Int
+)
 
 @Throws(IOException::class)
 private fun FileJob.scan(source: Path, @PluralsRes notificationTitleRes: Int): ScanInfo {
@@ -315,6 +344,8 @@ private class ScanInfo {
     var size = 0L
         private set
 
+    private val directorySubtreeInfos = mutableMapOf<Path, DirectorySubtreeInfo>()
+
     private var lastNotificationTimeMillis = 0L
 
     fun incrementFileCount() {
@@ -324,6 +355,13 @@ private class ScanInfo {
     fun addToSize(size: Long) {
         this.size += size
     }
+
+    fun setDirectorySubtreeInfo(directory: Path, size: Long, fileCount: Int) {
+        directorySubtreeInfos[directory] = DirectorySubtreeInfo(size, fileCount)
+    }
+
+    fun getDirectorySubtreeInfo(directory: Path): DirectorySubtreeInfo? =
+        directorySubtreeInfos[directory]
 
     fun shouldPostNotification(): Boolean {
         val currentTimeMillis = System.currentTimeMillis()
@@ -336,6 +374,8 @@ private class ScanInfo {
         }
     }
 }
+
+private class DirectorySubtreeInfo(val size: Long, val fileCount: Int)
 
 private fun FileJob.postTransferSizeNotification(
     transferInfo: TransferInfo,
@@ -352,7 +392,11 @@ private fun FileJob.postTransferSizeNotification(
     val fileCount = transferInfo.fileCount
     val target = transferInfo.target!!
     val size = transferInfo.size
-    val transferredSize = transferInfo.displayedTransferredSize().coerceAtMost(size)
+    val transferredSize = if (force && transferInfo.isComplete()) {
+        size
+    } else {
+        transferInfo.displayedTransferredSize().coerceAtMost(size)
+    }
     if (fileCount == 1) {
         title = getString(titleOneRes, getFileName(currentSource), getFileName(target))
         val sizeString = size.asFileSize().formatHumanReadable(service)
@@ -424,7 +468,7 @@ private fun FileJob.postTransferCountNotification(
     postNotification(title, text, null, null, max, progress, indeterminate, true)
 }
 
-private class TransferInfo(scanInfo: ScanInfo, val target: Path?) {
+private class TransferInfo(private val scanInfo: ScanInfo, val target: Path?) {
     var fileCount: Int = scanInfo.fileCount
         private set
     var transferredFileCount = 0
@@ -454,13 +498,19 @@ private class TransferInfo(scanInfo: ScanInfo, val target: Path?) {
     }
 
     fun skipFile(path: Path) {
-        --fileCount
-        try {
-            size -= path.readAttributes(
-                BasicFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS
-            ).size()
-        } catch (e: IOException) {
-            e.printStackTrace()
+        val directorySubtreeInfo = scanInfo.getDirectorySubtreeInfo(path)
+        if (directorySubtreeInfo != null) {
+            fileCount -= directorySubtreeInfo.fileCount
+            size -= directorySubtreeInfo.size
+        } else {
+            --fileCount
+            try {
+                size -= path.readAttributes(
+                    BasicFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS
+                ).size()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
         }
         displayedSize = transferredSize.coerceAtMost(size)
     }
@@ -1332,7 +1382,7 @@ private fun FileJob.copyOrMove(
             }
             val isMerge = sourceIsDirectory && targetIsDirectory
             if (isMerge && actionAllInfo.merge) {
-                transferInfo.addTransferredFile(target)
+                transferInfo.addTransferredFile(source)
                 postCopyMoveNotification(transferInfo, source, type)
                 return true
             } else if (!isMerge && actionAllInfo.replace) {
@@ -1356,7 +1406,7 @@ private fun FileJob.copyOrMove(
                         }
                     }
                     if (isMerge) {
-                        transferInfo.addTransferredFile(target)
+                        transferInfo.addTransferredFile(source)
                         postCopyMoveNotification(transferInfo, source, type)
                         true
                     } else {

@@ -25,5 +25,6 @@ val fileJobNotificationTemplate =
         ongoing = true,
         onlyAlertOnce = true,
         category = NotificationCompat.CATEGORY_PROGRESS,
-        priority = NotificationCompat.PRIORITY_LOW
+        priority = NotificationCompat.PRIORITY_LOW,
+        foregroundServiceBehavior = NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE
     )
